@@ -4,8 +4,14 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import coms.repository.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductSize {
 
     @Id
@@ -21,47 +27,5 @@ public class ProductSize {
     @ManyToOne
     private Product product;
 
-    // Constructors, getters, setters...
 
-    public ProductSize() {
-        // Default constructor for JPA
-    }
-
-    public ProductSize(Size sizeName, boolean isAvailable, Product product) {
-        this.sizeName = sizeName;
-        this.isAvailable = isAvailable;
-        this.product = product;
-    }
-
-    public Long getSizeId() {
-        return sizeId;
-    }
-
-    public void setSizeId(Long sizeId) {
-        this.sizeId = sizeId;
-    }
-
-    public Size getSizeName() {
-        return sizeName;
-    }
-
-    public void setSizeName(Size sizeName) {
-        this.sizeName = sizeName;
-    }
-
-    public boolean isAvailable() {
-        return isAvailable;
-    }
-
-    public void setAvailable(boolean isAvailable) {
-        this.isAvailable = isAvailable;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
 }

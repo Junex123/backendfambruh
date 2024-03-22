@@ -119,11 +119,11 @@ public class UserOrderController {
         Set<ProductQuantity> products = order.getProducts();
         products.forEach(p -> {
             ProductImage img = new ProductImage();
-            img.setImageData(((ProductImage) p.getProduct().getProductImages()).getImageData());
+//            img.setImageData(((ProductImage) p.getProduct().getProductImages()).getImageData());
             img.setName(((ProductImage) p.getProduct().getProductImages()).getName());
             img.setImgId(((ProductImage) p.getProduct().getProductImages()).getImgId());
             img.setType(((ProductImage) p.getProduct().getProductImages()).getType());
-            p.getProduct().setProductImages((Set<ProductImage>) img);
+//            p.getProduct().setProductImages((Set<ProductImage>) img);
         });
         order.setProducts(products);
         return ResponseEntity.ok(order);
