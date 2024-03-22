@@ -1,10 +1,14 @@
 package coms.controller;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.Valid;
 
+import coms.dto.ProductDto;
+import coms.util.FtpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +26,7 @@ import coms.model.product.comboproduct;
 import coms.service.ProductService;
 
 @RestController
+@RequestMapping("/api/v1/product")
 @CrossOrigin(origins = "*")
 public class ProductController {
     
@@ -30,31 +35,44 @@ public class ProductController {
     
     @Autowired
     private ObjectMapper objectMapper;
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @PostMapping("/add/product")
-    public ResponseEntity<?> addNewProduct(@RequestParam("product") String product,
-                                           @RequestParam("images") MultipartFile[] images) throws IOException {
-        try {
-            Product p = objectMapper.readValue(product, Product.class);
-            for (MultipartFile image : images) {
-                ProductImage img = new ProductImage();
-                img.setName(image.getOriginalFilename());
-                img.setType(image.getContentType());
-                img.setImageData(ImageUtil.compressImage(image.getBytes()));
-                p.getProductImages().add(img);
-            }
-            Product savedProduct = this.productService.addProduct(p);
-            return ResponseEntity.ok(savedProduct);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Request");
+
+    @PostMapping
+    public ResponseEntity<?> addNewProduct(@RequestPart ProductDto productDto, @RequestPart List<MultipartFile> images, @RequestPart MultipartFile mainImage, @RequestPart MultipartFile detailImage) throws IOException {
+        images.add(mainImage);
+        images.add(detailImage);
+        FtpUtil.uploadFile(images);
+        Product product = Product.builder()
+                .brand(productDto.getBrand())
+                .price(productDto.getPrice())
+                .description(productDto.getDescription())
+                .productDiscountedPrice(productDto.getProductDiscountedPrice())
+                .salt(productDto.getSalt())
+                .sizes(productDto.getSizes())
+                .isAvailable(productDto.isAvailable())
+                .name(productDto.getName())
+                .totalAvailable(productDto.getTotalAvailable())
+                .build();
+        Set<ProductImage> productImages = new HashSet<>();
+        for (MultipartFile image : images) {
+            ProductImage img = new ProductImage();
+            img.setName(image.getOriginalFilename());
+            img.setType(image.getContentType());
+            img.setImageUrl(image.getOriginalFilename());
+            productImages.add(img);
         }
+        product.setProductImages(productImages);
+        product.setMainImage(mainImage.getOriginalFilename());
+        product.setDetailImage(detailImage.getOriginalFilename());
+
+
+        Product savedProduct = this.productService.addProduct(product);
+        return ResponseEntity.ok(savedProduct);
     }
 
     
     // Update existing product
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PutMapping("/update/product/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable("id") Long id, @Valid @RequestBody Product product){
         Product updateProduct = this.productService.findProduct(id);
         updateProduct.setName(product.getName());
@@ -68,40 +86,40 @@ public class ProductController {
     }
     
     // Get product by ID
-    @GetMapping("get-product/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> getProductById(@PathVariable("id") Long id){
         Product product = this.productService.findProduct(id);
         if (product == null) {
             return ResponseEntity.notFound().build();
         }
         // Decompress image and set it to the product
-        ProductImage img =  new ProductImage();
-        img.setImageData(ImageUtil.decompressImage(product.getProductImages().iterator().next().getImageData()));
-        img.setImgId(product.getProductImages().iterator().next().getImgId());
-        img.setName(product.getProductImages().iterator().next().getName());
-        img.setType(product.getProductImages().iterator().next().getType());
-        product.getProductImages().clear();
-        product.getProductImages().add(img);
+//        ProductImage img =  new ProductImage();
+//        img.setImageData(ImageUtil.decompressImage(product.getProductImages().iterator().next().getImageData()));
+//        img.setImgId(product.getProductImages().iterator().next().getImgId());
+//        img.setName(product.getProductImages().iterator().next().getName());
+//        img.setType(product.getProductImages().iterator().next().getType());
+//        product.getProductImages().clear();
+//        product.getProductImages().add(img);
         return ResponseEntity.ok(product);
     }
     
     // Get all products
-    @GetMapping("/get/all-products")
+    @GetMapping
     public ResponseEntity<?> getAllProducts(){
         List<Product> allProducts = this.productService.findAllProducts();
         if(allProducts.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        for (Product product : allProducts) {
-            // Decompress image and set it to each product
-            ProductImage img =  new ProductImage();
-            img.setImageData(ImageUtil.decompressImage(product.getProductImages().iterator().next().getImageData()));
-            img.setImgId(product.getProductImages().iterator().next().getImgId());
-            img.setName(product.getProductImages().iterator().next().getName());
-            img.setType(product.getProductImages().iterator().next().getType());
-            product.getProductImages().clear();
-            product.getProductImages().add(img);
-        }
+//        for (Product product : allProducts) {
+//            // Decompress image and set it to each product
+//            ProductImage img =  new ProductImage();
+//            img.setImageData(ImageUtil.decompressImage(product.getProductImages().iterator().next().getImageData()));
+//            img.setImgId(product.getProductImages().iterator().next().getImgId());
+//            img.setName(product.getProductImages().iterator().next().getName());
+//            img.setType(product.getProductImages().iterator().next().getType());
+//            product.getProductImages().clear();
+//            product.getProductImages().add(img);
+//        }
         return ResponseEntity.ok(allProducts);
     }
     
@@ -112,16 +130,16 @@ public class ProductController {
         if(products.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        for (Product product : products) {
-            // Decompress image and set it to each product
-            ProductImage img =  new ProductImage();
-            img.setImageData(ImageUtil.decompressImage(product.getProductImages().iterator().next().getImageData()));
-            img.setImgId(product.getProductImages().iterator().next().getImgId());
-            img.setName(product.getProductImages().iterator().next().getName());
-            img.setType(product.getProductImages().iterator().next().getType());
-            product.getProductImages().clear();
-            product.getProductImages().add(img);
-        }
+//        for (Product product : products) {
+//            // Decompress image and set it to each product
+//            ProductImage img =  new ProductImage();
+//            img.setImageData(ImageUtil.decompressImage(product.getProductImages().iterator().next().getImageData()));
+//            img.setImgId(product.getProductImages().iterator().next().getImgId());
+//            img.setName(product.getProductImages().iterator().next().getName());
+//            img.setType(product.getProductImages().iterator().next().getType());
+//            product.getProductImages().clear();
+//            product.getProductImages().add(img);
+//        }
         return ResponseEntity.ok(products);
     }
 

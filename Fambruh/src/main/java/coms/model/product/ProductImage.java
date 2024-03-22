@@ -13,10 +13,9 @@ public class ProductImage {
     private String name;
     
     private String type;
-    
-    @Lob
-    @Column(name = "image_data")
-    private byte[] imageData;
+
+    @Column(name = "image_url")
+    private String imageUrl;
     
    
 
@@ -26,15 +25,12 @@ public class ProductImage {
     }
 
 
-
-	public ProductImage( String name, String type, byte[] imageData) {
-		super();
+	public ProductImage(Long imgId, String name, String type, String imageUrl) {
+		this.imgId = imgId;
 		this.name = name;
 		this.type = type;
-		this.imageData = imageData;
+		this.imageUrl = imageUrl;
 	}
-
-
 
 	public Long getImgId() {
 		return imgId;
@@ -71,19 +67,11 @@ public class ProductImage {
 	}
 
 
-
-	public byte[] getImageData() {
-		return imageData;
+	public String getImageUrl() {
+		return imageUrl;
 	}
 
-
-
-	public void setImageData(byte[] imageData) {
-		this.imageData = imageData;
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
 	}
-
-   
-
-
-
 }
